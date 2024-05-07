@@ -1,0 +1,41 @@
+{
+  "name": "@youmoo/metabase-migrate",
+  "version": "0.0.1",
+  "description": "Easily migrate Metabase data between different instances/environments in a version-control friendly way",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module",
+  "bin": {
+    "metabase-migrate": "bin/metabase-migrate"
+  },
+  "keywords": [
+    "Metabase",
+    "Metabase migrate",
+    "Metabase migrate CLI"
+  ],
+  "author": "youmoo <youmoo@promise.rocks>",
+  "prettier": {
+    "singleQuote": true,
+    "semi": true,
+    "tabWidth": 2,
+    "arrowParens": "avoid",
+    "trailingComma": "all",
+    "printWidth": 80
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Youmoo/metabase-migrate/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Youmoo/metabase-migrate.git"
+  },
+  "files": [
+    "src",
+    "bin"
+  ]
+}

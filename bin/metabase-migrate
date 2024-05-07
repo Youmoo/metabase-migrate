@@ -1,0 +1,117 @@
+#!/usr/bin/env node
+import { mkdir, readdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { segment } from '../src/lib/segmenter.js';
+import { synthesize } from '../src/lib/synthesizer.js';
+
+const {
+  isSegment,
+  isSynthesize,
+  file: sqlPath,
+  output: outputPath,
+  databases: databasesPath,
+  segments: segmentsPath,
+  redact,
+} = parseArgs();
+
+if (isSegment) {
+  await doSegment({ sqlPath, outputPath });
+}
+
+if (isSynthesize) {
+  await doSynthesize({ databasesPath, segmentsPath, outputPath });
+}
+
+async function doSegment({ sqlPath, outputPath }) {
+  const { databaseSegmentIndex, databases, segments } = await segment({
+    sqlPath,
+    redact,
+  });
+  const segmentsDir = join(outputPath, 'segments');
+  await mkdir(segmentsDir, { recursive: true });
+  const oldFiles = await readdir(segmentsDir);
+  if (oldFiles.length) {
+    throw new Error(`${segmentsDir} must be empty`);
+  }
+
+  // write all segments to files
+  await Promise.all(
+    segments.map((segment, i) =>
+      writeFile(`${segmentsDir}/metabase-${i}.sql`, segment),
+    ),
+  );
+
+  const dir = join(outputPath, 'databases.json');
+  await writeFile(
+    dir,
+    JSON.stringify(
+      {
+        kindReminder:
+          'Please only update the `details` property and keep the rest intact!',
+        databaseSegmentIndex,
+        databases,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+async function doSynthesize({ databasesPath, segmentsPath, outputPath }) {
+  const synthesized = await synthesize({ databasesPath, segmentsPath });
+  await writeFile(outputPath, synthesized, 'utf-8');
+}
+
+function parseArgs() {
+  const [subcommand, ...rest] = process.argv.slice(2);
+
+  const segment = 'segment';
+  const synthesize = 'synthesize';
+  const params = {
+    file: null,
+    output: null,
+    databases: null,
+    segments: null,
+    redact: null,
+  };
+  Object.keys(params).forEach(key => {
+    const prefix = `--${key}=`;
+    const value = rest.find(arg => arg.startsWith(prefix));
+    if (value) {
+      params[key] = value.replace(prefix, '');
+    }
+  });
+
+  if (![segment, synthesize].includes(subcommand)) {
+    throw new Error(
+      `Invalid subcommand: ${subcommand}. Valid subcommands are: ${segment}, ${synthesize}`,
+    );
+  }
+
+  const isSegment = subcommand === segment;
+  const isSynthesize = subcommand === synthesize;
+
+  if (isSegment) {
+    if (!params.file || !params.output) {
+      throw new Error(
+        `Missing required arguments. Required arguments are: --file, --output`,
+      );
+    }
+  }
+
+  if (isSynthesize) {
+    if (!params.databases || !params.segments || !params.output) {
+      throw new Error(
+        `Missing required arguments. Required arguments are: --databases, --segments, --output`,
+      );
+    }
+  }
+
+  return {
+    ...params,
+    redact: !['0', 'false'].includes(params.redact),
+    subcommand,
+    isSegment,
+    isSynthesize,
+  };
+}
