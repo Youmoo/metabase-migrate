@@ -4,7 +4,7 @@ import { parseDatabaseSegment, isDatabaseSegment } from './common.js';
 export async function segment({ sqlPath, redact }) {
   const sql = await readFile(sqlPath, 'utf8');
 
-  const match = sql.matchAll(/--\n--.+\n--$/gm);
+  const match = sql.matchAll(/--\r?\n--.+\r?\n--$/gm);
 
   const segments = [];
   let databaseSegmentIndex = null;
