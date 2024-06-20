@@ -1,4 +1,4 @@
-const DATABASE_SEGMENT_SEARCH_STRING = /COPY \w+\.metabase_database/;
+const DATABASE_SEGMENT_SEARCH_STRING = /--[\s\S]+?COPY \w+\.metabase_database/;
 
 export function isDatabaseSegment(segment) {
   return DATABASE_SEGMENT_SEARCH_STRING.test(segment);

@@ -3,6 +3,7 @@ import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { segment } from '../src/lib/segmenter.js';
 import { synthesize } from '../src/lib/synthesizer.js';
+import { parseDatabaseSegment } from '../src/lib/common.js';
 
 const {
   isSegment,
@@ -36,9 +37,22 @@ async function doSegment({ sqlPath, outputPath }) {
 
   // write all segments to files
   await Promise.all(
-    segments.map((segment, i) =>
-      writeFile(`${segmentsDir}/metabase-${i}.sql`, segment),
-    ),
+    segments.map((segment, i) => {
+      if (i === databaseSegmentIndex && redact) {
+        const { databaseCopyClause, columns, rows, detailsIndex } =
+          parseDatabaseSegment(segment);
+        segment = `${databaseCopyClause} (${columns.join(', ')}) FROM stdin;
+${rows
+  .map(row => {
+    row[detailsIndex] = '{}';
+    return row.join('\t');
+  })
+  .join('\n')}
+\\.
+`;
+      }
+      return writeFile(`${segmentsDir}/metabase-${i}.sql`, segment);
+    }),
   );
 
   const dir = join(outputPath, 'databases.json');
