@@ -1,6 +1,6 @@
 {
   "name": "@youmoo/metabase-migrate",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Easily migrate Metabase data between different instances/environments in a version-control friendly way",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

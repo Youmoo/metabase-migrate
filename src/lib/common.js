@@ -12,7 +12,7 @@ export function parseDatabaseSegment(segment) {
   const [header, ...body] = segment
     .replaceAll(/--[^(]+\s\(|\).+;|\\\.\s+/g, '')
     .trim()
-    .split('\n');
+    .split(/\r?\n/);
 
   const columns = header.split(/,\s+/);
   const rows = body.map(line => line.split(/\t/));
